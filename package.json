@@ -1,0 +1,15 @@
+{
+  "name": "my-rxer",
+  "version": "1.0.0",
+  "description": "AI Research Agentic Tool",
+  "main": "index.js",
+  "author": "AI Research Agent",
+  "license": "MIT",
+  "scripts": {
+    "init": "node init.js",
+    "research": "node research.js",
+    "test": "node test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
