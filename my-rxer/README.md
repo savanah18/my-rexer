@@ -2,6 +2,10 @@
 
 This directory contains the core implementation of the AI research agentic system.
 
+> **AI Creator**: Deep Agent Code (dcode) with Qwen3.5-9B (4-bit AWQ via vLLM)
+
+This repository was created by an open-source deep agent running locally on 4-bit quantized Qwen3.5-9B, served via vLLM infrastructure. No enterprise subscriptions or paid tools were used.
+
 ## Structure
 
 ```

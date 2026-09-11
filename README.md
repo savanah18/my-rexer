@@ -1,6 +1,24 @@
 # my-rxer: AI Research Agentic Tool
 
+> **Created by Deep Agent Code (dcode)**
+
 An autonomous agent-based system for AI research, discovery, and knowledge synthesis.
+
+## Model & Infrastructure
+
+This repository was designed and created using **Qwen3.5 9B** - a **4-bit AWQ quantized** version of Qwen3.5 served locally via **vLLM**.
+
+- **Model**: Qwen3.5-9B (4-bit AWQ)
+- **Service**: Locally hosted vLLM
+- **License**: No enterprise subscription paid - open weights, zero cost
+
+## Overview
+
+my-rxer is a sophisticated agentic framework designed to:
+- Conduct autonomous AI research across multiple sources
+- Synthesize and curate AI research
+- Build specialized knowledge agents and skills
+- Explore and document cutting-edge AI research
 
 ## Overview
 
