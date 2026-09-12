@@ -12,10 +12,11 @@ This document outlines the roadmap for evolving `/home/dev/workspace/lnd/aiops/a
 
 ### Current State Assessment
 
-- **Maturity Level**: ~15% toward full-featured multi-agent system
-- **Architecture**: Solid foundation, but core implementation incomplete
-- **Code Status**: ~20% agent framework, prototypes only for skills
-- **Dependencies**: Base NPM setup exists, no functional dependencies configured
+- **Maturity Level**: ~20-25% toward full-featured multi-agent system
+- **Architecture**: Hybrid modular 3-tier hierarchy designed
+- **Code Status**: Core framework complete (71/71 tests passing), skill prototypes pending
+- **Components**: Task queue, workers, registry, logger, memory manager all functional
+- **Tests**: 100% pass rate achieved on core components via TDD approach
 
 ### Target State
 
@@ -271,25 +272,66 @@ Agent:
 
 ## Implementation Phased Roadmap
 
-### Phase P0: Core Foundation (~40-60 hours)
+### Phase P0: Core Foundation (~50-70 hours)
 
-**Goal**: Establish the infrastructure that enables all future agents.
+**Goal**: Establish the infrastructure that enables all future agents with containerized deployment support.
 
 **Skills to Build**:
-- [ ] Worker class with registry system
+- [ ] Worker class with registry system (Python, asyncio)
 - [ ] Tool abstraction (LLM, web, file, memory)
 - [ ] Task queue and execution model
 - [ ] Basic logging and observability
+- [ ] Container orchestration integration
 
 **Tools to Build**:
-- [ ] LLM client wrapper (vLLM + BGE)
-- [ ] Web scraper/API client
+- [ ] LLM client wrapper (vLLM + BGE via Python)
+- [ ] Web scraper/API client (aiohttp)
 - [ ] File system access
-- [ ] Basic memory manager
+- [ ] Basic memory manager (in-process + Redis/SQLite)
 
-**Acceptance**: Infrastructure enables simple tool-chaining workflows
+**Non-Functional Requirements**:
 
-**Estimate**: 3-5 days of sustained work
+1. **Containerization (MCP Tool Compliance)**:
+   - Docker Compose setup for isolated environment
+   - vLLM server container for LLM inference
+   - my-rxer application container
+   - Persistent volume mounts for model weights
+   - Health check endpoints
+
+2. **Performance**:
+   - Async I/O for all I/O-bound operations
+   - Connection pooling for HTTP requests
+   - Worker concurrency control
+   - Latency < 5s for typical queries
+
+3. **Reliability**:
+   - Graceful shutdown on SIGTERM
+   - Circuit breakers for external service calls
+   - Retry logic for transient failures
+   - Automatic reconnection to vLLM backend
+
+4. **Security**:
+   - Environment variable configuration (no hardcoded secrets)
+   - Input validation for all tool calls
+   - Rate limiting for external APIs
+   - Sandboxed worker execution
+
+5. **Observability**:
+   - Structured JSON logging
+   - Request ID tracking across services
+   - Basic metrics (latency, throughput, errors)
+   - Docker container health metrics
+
+**Docker Requirements**:
+- Docker 20.10+
+- docker-compose 2.0+
+- vLLM backend container
+- Redis for optional persistent memory
+- Python 3.10+ virtual environment in container
+
+**Acceptance**: Infrastructure enables simple tool-chaining workflows with isolated, containerized deployment
+
+**Estimate**: 4-6 days of sustained work (increased from 3-5 due to containerization)
 
 ---
 
@@ -475,9 +517,63 @@ Agent:
 
 ---
 
-## Technical Recommendations
+## Non-Functional Requirements
 
-### 1. **Language & Dependencies**
+### 1. **Containerization (MCP Tool Support)** ⭐
+
+**Strategy**: Triple-tier containerized architecture
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # LLM inference layer
+  vllm-backend:
+    build: ./vllm-container
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/models
+      - ./config:/config
+    environment:
+      - VLLM_PORT=8000
+    restart: unless-stopped
+    health_check:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main application
+  my-rxer-app:
+    build: ./
+    depends_on: [vllm-backend]
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    environment:
+      - VLLM_URL=http://vllm-backend:8000
+      - REDIS_HOST=redis
+    restart: unless-stopped
+
+  # Memory layer (optional)
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    health_check:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+
+networks:
+  default:
+    driver: bridge
+```
+
+### 2. **Language & Dependencies**
 
 **Current**: Node.js/npm with Python runtime available
 **Recommendation**: Define `package.json` with tool dependencies
